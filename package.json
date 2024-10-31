@@ -1,0 +1,20 @@
+{
+	"scripts": {
+		"dev": "rollup -c --bundleConfigAsCjs"
+	},
+	"dependencies": {
+		"lodash": "^4.17.21",
+		"tslib": "^2.8.0",
+		"typescript": "^5.6.3"
+	},
+	"devDependencies": {
+		"@rollup/plugin-commonjs": "^28.0.1",
+		"@rollup/plugin-node-resolve": "^15.3.0",
+		"@rollup/plugin-typescript": "^12.1.1",
+		"@types/lodash": "^4.17.12",
+		"@types/node": "^22.8.4",
+		"@types/screeps": "^3.3.8",
+		"rollup": "^4.24.3",
+		"rollup-plugin-clear": "^2.0.7"
+	}
+}

@@ -1,0 +1,9 @@
+# Generated filea in dist dir
+/dist/*.js
+/dist/*.js.map
+
+# node
+/node_modules
+
+# screep: world files
+.sync
