@@ -15,34 +15,48 @@ function findStorage(creep: Creep): StructureStorage | StructureContainer | null
     return creep.pos.findClosestByPath(containers);
 }
 
+enum STATE {
+    COLLECTING,
+    BUILDING,
+}
+
 const Builder: Role = {
     run(creep: Creep) {
-        if (creep.memory.building && creep.store[RESOURCE_ENERGY] === 0) {
-            creep.memory.building = false;
-            creep.say("🔄 harvest");
-        }
-        if (!creep.memory.building && creep.store.getFreeCapacity() === 0) {
-            creep.memory.building = true;
-            creep.say("🚧 build");
+        if (!creep.memory.state) {
+            creep.memory.state = STATE.COLLECTING;
         }
 
-        if (creep.memory.building) {
-            const site = creep.pos.findClosestByPath(FIND_CONSTRUCTION_SITES);
-            if (site) {
-                if (creep.build(site) === ERR_NOT_IN_RANGE) {
-                    creep.moveTo(site, { visualizePathStyle: { stroke: "#ffffff" } });
+        switch (creep.memory.state) {
+            case STATE.COLLECTING:
+                if (creep.store.getFreeCapacity() === 0) {
+                    creep.memory.state = STATE.BUILDING;
+                    break;
                 }
-            }
-        } else {
-            const storage = findStorage(creep);
-            if (storage) {
-                if (creep.withdraw(storage, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-                    creep.moveTo(storage, { visualizePathStyle: { stroke: "#ffaa00" } });
+
+                const storage = findStorage(creep);
+                if (storage) {
+                    if (creep.withdraw(storage, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                        creep.moveTo(storage, { visualizePathStyle: { stroke: "#ffaa00" } });
+                    }
                 }
-            }
+                break;
+
+            case STATE.BUILDING:
+                if (creep.store[RESOURCE_ENERGY] === 0) {
+                    creep.memory.state = STATE.COLLECTING;
+                    break;
+                }
+
+                const site = creep.pos.findClosestByPath(FIND_CONSTRUCTION_SITES);
+                if (site) {
+                    if (creep.build(site) === ERR_NOT_IN_RANGE) {
+                        creep.moveTo(site, { visualizePathStyle: { stroke: "#ffffff" } });
+                    }
+                }
+                break;
         }
     },
-    
+
     spawnCap(room) {
         const maxBuilders = 2;
 

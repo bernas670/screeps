@@ -6,7 +6,6 @@ declare global {
         role: RoleLabel;
 
         upgrading?: boolean;
-        building?: boolean;
         state?: number;
 
         source?: Id<_HasId>;

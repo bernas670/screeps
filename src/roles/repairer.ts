@@ -47,12 +47,28 @@ const Repairer: Role = {
                     break;
                 }
 
+                const repairPriority = [
+                    STRUCTURE_SPAWN,
+                    STRUCTURE_EXTENSION,
+                    STRUCTURE_ROAD,
+                    STRUCTURE_CONTAINER,
+                    STRUCTURE_TOWER,
+                    STRUCTURE_WALL,
+                    STRUCTURE_RAMPART
+                ]
+
                 const targets = creep.room.find(FIND_STRUCTURES, {
                     filter: (structure) => (
                         !(structure instanceof StructureWall) && 
                         structure.hits < structure.hitsMax * 0.8
                     )
                 });
+
+                
+
+
+                console.log("Repairer targets:");
+                targets.forEach(t => console.log("    -",t.structureType, t.hits, t.hitsMax, (t.hits / t.hitsMax) * 100));
 
                 if (targets.length) {
                     if (creep.repair(targets[0]) === ERR_NOT_IN_RANGE) {

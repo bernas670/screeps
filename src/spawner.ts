@@ -25,7 +25,6 @@ export default function spawnCreeps() {
         const spawnPriority: RoleLabel[] = [
             RoleLabel.STATIC_HARVESTER,
             RoleLabel.HAULER,
-            // RoleLabel.HARVESTER,
             RoleLabel.REPAIRER,
             RoleLabel.UPGRADER,
             RoleLabel.BUILDER,

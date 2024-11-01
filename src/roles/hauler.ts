@@ -57,6 +57,7 @@ function findTarget(creep: Creep): EnergyStorageStructure | null {
         [STRUCTURE_CONTAINER]
     ];
 
+    // find the closest target with the highest priority
     for (const types of targetPriority) {
         const structures = creep.room.find(FIND_STRUCTURES, {
             filter: (structure) => (
@@ -124,7 +125,7 @@ const Hauler: Role = {
 
     spawnCap(room) {
         const sources = room.find(FIND_SOURCES);
-        return sources.length * 2;
+        return Math.floor(sources.length * 1.5);
     },
 
     body(room: Room) {
