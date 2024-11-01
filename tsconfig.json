@@ -11,9 +11,9 @@
     "allowSyntheticDefaultImports": true,
     "allowUnreachableCode": false,
     "types": ["node", "screeps"],
-    "outDir": "./dist",
+    "outDir": "./default",
     "rootDir": "./src"
   },
   "include": ["./src/**/*.ts", "./src/**/*.d.ts"],
-  "exclude": ["node_modules", "dist", ".git"]
+  "exclude": ["node_modules", "default", ".git"]
 }

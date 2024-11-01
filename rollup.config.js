@@ -8,7 +8,7 @@ const typescript = require('@rollup/plugin-typescript');
 export default {
   input: "src/main.ts",
   output: {
-    file: "dist/main.js",
+    file: "default/main.js",
     format: "cjs",
     sourcemap: true
   },

@@ -1,6 +1,6 @@
-# Generated filea in dist dir
-/dist/*.js
-/dist/*.js.map
+# Generated filea in default dir
+/default/*.js
+/default/*.js.map
 
 # node
 /node_modules
