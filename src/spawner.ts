@@ -1,8 +1,5 @@
 import * as _ from "lodash";
-import roleHarvester from "./roles/harvester";
-import roleUpgrader from "./roles/upgrader";
-import roleBuilder from "./roles/builder";
-import { RoleLabel } from "./roles";
+import RoleMap, { Role, RoleLabel } from "./roles";
 
 export default function spawnCreeps() {
 
@@ -24,38 +21,30 @@ export default function spawnCreeps() {
             );
             return;
         }
- 
-        const harvesters = _.filter(Game.creeps, (creep) => creep.memory.role === RoleLabel.HARVESTER);
-        if (harvesters.length < roleHarvester.spawnCap(spawn.room)) {
-            const newName = 'Harvester' + Game.time;
-            console.log('Spawning new harvester: ' + newName);
-            spawn.spawnCreep(
-                body,
-                newName,
-                { memory: { role: RoleLabel.HARVESTER } }
-            );
-        }
 
-        const builders = _.filter(Game.creeps, (creep) => creep.memory.role === RoleLabel.BUILDER);
-        if (builders.length < roleBuilder.spawnCap(spawn.room)) {
-            const newName = 'Builder' + Game.time;
-            console.log('Spawning new builder: ' + newName);
-            spawn.spawnCreep(
-                body,
-                newName,
-                { memory: { role: RoleLabel.BUILDER } }
-            );
-        }
+        const spawnPriority: RoleLabel[] = [
+            RoleLabel.STATIC_HARVESTER,
+            RoleLabel.HAULER,
+            // RoleLabel.HARVESTER,
+            RoleLabel.REPAIRER,
+            RoleLabel.UPGRADER,
+            RoleLabel.BUILDER,
+        ];
 
-        const upgraders = _.filter(Game.creeps, (creep) => creep.memory.role === RoleLabel.UPGRADER);
-        if (upgraders.length < roleUpgrader.spawnCap(spawn.room)) {
-            const newName = 'Upgrader' + Game.time;
-            console.log('Spawning new upgrader: ' + newName);
+        for (const roleLabel of spawnPriority) {
+            const creeps = _.filter(Game.creeps, (creep) => creep.memory.role === roleLabel);
+            const role = RoleMap[roleLabel];
+
+            if (creeps.length >= role.spawnCap(spawn.room)) continue;
+
+            const newName = roleLabel + Game.time;
+            console.log(`Spawning new ${roleLabel}: ${newName}`);
             spawn.spawnCreep(
-                body,
+                role.body(spawn.room),
                 newName,
-                { memory: { role: RoleLabel.UPGRADER } }
+                { memory: { role: roleLabel } }
             );
+            return;
         }
     });
 }

@@ -4,11 +4,12 @@ declare global {
     interface CreepMemory {
         [name: string]: any;
         role: RoleLabel;
+
         upgrading?: boolean;
         building?: boolean;
         state?: number;
 
-        source?: Id<Source>;
+        source?: Id<_HasId>;
         target?: Id<_HasId>;
     }
 

@@ -1,9 +1,6 @@
-import roleBuilder from "./roles/builder";
-import roleHarvester from "./roles/harvester";
-import roleUpgrader from "./roles/upgrader";
 import * as _ from "lodash";
 import spawnCreeps from "./spawner";
-import { RoleLabel } from "./roles";
+import RoleMap from "./roles";
 
 export function loop() {
 
@@ -37,17 +34,7 @@ export function loop() {
 
     for (const name in Game.creeps) {
         const creep = Game.creeps[name];
-
-        switch (creep.memory.role) {
-            case RoleLabel.UPGRADER:
-                roleUpgrader.run(creep);
-                break;
-            case RoleLabel.BUILDER:
-                roleBuilder.run(creep);
-                break;
-            case RoleLabel.HARVESTER:
-                roleHarvester.run(creep);
-                break;
-        }
+        const role = RoleMap[creep.memory.role];
+        role.run(creep);
     }
 }

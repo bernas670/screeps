@@ -1,24 +1,21 @@
-let roleBuilder: {
-    run(creep: Creep): void
-    spawnCap(room: Room): number
+import { Role } from ".";
+
+function findStorage(creep: Creep): StructureStorage | StructureContainer | null {
+    const containers = creep.room.find(FIND_STRUCTURES, {
+        filter: (structure) => {
+            return (
+                structure instanceof StructureStorage ||
+                structure instanceof StructureContainer
+            ) && structure.store[RESOURCE_ENERGY] > 0;
+        }
+    }) as (StructureStorage | StructureContainer)[];
+
+    if (!containers.length) return null;
+    else if (containers.length === 1) return containers[0];
+    return creep.pos.findClosestByPath(containers);
 }
 
-function findSource(creep: Creep): Source {
-    if (creep.memory.source) {
-        const source = Game.getObjectById(creep.memory.source);
-        if (source) return source;
-    }
-
-    const sources = creep.room.find(FIND_SOURCES);
-    const randomIndex = Math.floor(Math.random() * sources.length);
-    const source = sources[randomIndex];
-    
-    creep.memory.source = source.id;
-
-    return source;
-}
-
-export default roleBuilder = {
+const Builder: Role = {
     run(creep: Creep) {
         if (creep.memory.building && creep.store[RESOURCE_ENERGY] === 0) {
             creep.memory.building = false;
@@ -37,19 +34,32 @@ export default roleBuilder = {
                 }
             }
         } else {
-            const source = findSource(creep);
-            if (creep.harvest(source) === ERR_NOT_IN_RANGE) {
-                creep.moveTo(source, { visualizePathStyle: { stroke: "#ffaa00" } });
+            const storage = findStorage(creep);
+            if (storage) {
+                if (creep.withdraw(storage, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                    creep.moveTo(storage, { visualizePathStyle: { stroke: "#ffaa00" } });
+                }
             }
         }
     },
+    
     spawnCap(room) {
-        const maxBuilders = 5;
+        const maxBuilders = 2;
 
         const sites = room.find(FIND_CONSTRUCTION_SITES);
         const progressLeft = sites.reduce((total, site) => total + (site.progressTotal - site.progress), 0);
         const builders = Math.ceil(progressLeft / 1500);
-        
+
         return Math.min(builders, maxBuilders);
-    }
+    },
+
+    body(room: Room) {
+        return [
+            WORK, WORK, WORK, WORK,         // 400
+            CARRY, CARRY, CARRY,            // 150
+            MOVE, MOVE, MOVE, MOVE, MOVE    // 150
+        ]
+    },
 }
+
+export default Builder;
