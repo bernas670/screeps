@@ -18,6 +18,7 @@ function findStorage(creep: Creep): StructureStorage | StructureContainer | null
 enum STATE {
     COLLECTING,
     BUILDING,
+    STORING,
 }
 
 const Builder: Role = {
@@ -48,9 +49,27 @@ const Builder: Role = {
                 }
 
                 const site = creep.pos.findClosestByPath(FIND_CONSTRUCTION_SITES);
-                if (site) {
-                    if (creep.build(site) === ERR_NOT_IN_RANGE) {
-                        creep.moveTo(site, { visualizePathStyle: { stroke: "#ffffff" } });
+                if (!site) {
+                    creep.memory.state = STATE.STORING;
+                    break;
+                }
+
+                if (creep.build(site) === ERR_NOT_IN_RANGE) {
+                    creep.moveTo(site, { visualizePathStyle: { stroke: "#ffffff" } });
+                }
+                break;
+
+            case STATE.STORING:
+                const sites = creep.room.find(FIND_CONSTRUCTION_SITES);
+                if (sites.length) {
+                    creep.memory.state = STATE.COLLECTING;
+                    break;
+                }
+
+                const mainStorage = creep.room.storage;
+                if (mainStorage) {
+                    if (creep.transfer(mainStorage, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                        creep.moveTo(mainStorage, { visualizePathStyle: { stroke: "#ffffff" } });
                     }
                 }
                 break;
@@ -62,7 +81,7 @@ const Builder: Role = {
 
         const sites = room.find(FIND_CONSTRUCTION_SITES);
         const progressLeft = sites.reduce((total, site) => total + (site.progressTotal - site.progress), 0);
-        const builders = Math.ceil(progressLeft / 1500);
+        const builders = Math.ceil(progressLeft / 3000);
 
         return Math.min(builders, maxBuilders);
     },
