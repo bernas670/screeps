@@ -1,4 +1,6 @@
+import _ from "lodash";
 import { Role } from ".";
+import { log } from "console";
 
 
 function findStorage(creep: Creep): StructureStorage | StructureContainer | null {
@@ -14,6 +16,85 @@ function findStorage(creep: Creep): StructureStorage | StructureContainer | null
     if (!containers.length) return null;
     else if (containers.length === 1) return containers[0];
     return creep.pos.findClosestByPath(containers);
+}
+
+function logRepairTargets(targets: Structure[]) {
+    console.log("Repairer targets:");
+    for (const target of targets) {
+        const percentage = target.hits / target.hitsMax * 100;
+        console.log(`   - ${target.structureType}: ${percentage.toFixed(2)}% (${target.hits}/${target.hitsMax})`);
+    }
+}
+
+function logRepairing(creep: Creep, target: Structure) {
+    const percentage = target.hits / target.hitsMax * 100;
+    console.log(`${creep.name} repairing ${target.structureType} (${percentage.toFixed(2)}%)`);
+}
+
+function findRepairTarget(creep: Creep): Structure | null {
+    // first look for structures that were just built
+    // TODO: maybe change this to just ramparts
+    const decaying = creep.room.find(FIND_STRUCTURES, {
+        filter: (structure) => (
+            (structure instanceof StructureRampart || structure instanceof StructureWall)
+            && structure.hits === 1
+        )
+    });
+    if (decaying.length) {
+        // find lowest health percentage structure
+        logRepairTargets(decaying);
+        const target2 = creep.pos.findClosestByPath(decaying) as Structure;
+        creep.memory.target = target2.id;
+        logRepairing(creep, target2);
+        return target2;
+    }
+
+    const previousTarget = creep.memory.target ? Game.getObjectById(creep.memory.target) as Structure : null;
+    if (previousTarget && previousTarget.hits < previousTarget.hitsMax) {
+        return previousTarget;
+    }
+    creep.memory.target = undefined;
+
+    // find closest structure below 80% (excluding walls and ramparts)
+    // TODO: make sure other creeps are not already repairing this target
+    const structures = creep.room.find(FIND_STRUCTURES, {
+        filter: (structure) => (
+            !(structure instanceof StructureWall || structure instanceof StructureRampart) &&
+            structure.hits < structure.hitsMax * 0.8
+        )
+    });
+    if (structures.length) {
+        // find lowest health percentage structure
+        logRepairTargets(structures);
+        const target2 = _.minBy(structures, (s) => s.hits / s.hitsMax) as Structure;
+        creep.memory.target = target2.id;
+        logRepairing(creep, target2);
+        return target2;
+    }
+
+    const ramparts = creep.room.find(FIND_MY_STRUCTURES, {
+        filter: (structure) => (structure instanceof StructureRampart && structure.hits < structure.hitsMax * 0.9)
+    });
+    if (ramparts.length) {
+        logRepairTargets(ramparts);
+        const rampart = _.minBy(ramparts, (s) => s.hits / s.hitsMax) as Structure;
+        creep.memory.target = rampart.id;
+        logRepairing(creep, rampart);
+        return rampart;
+    }
+
+    const walls = creep.room.find(FIND_STRUCTURES, {
+        filter: (structure) => (structure instanceof StructureWall && structure.hits < structure.hitsMax * 0.9)
+    });
+    if (walls.length) {
+        logRepairTargets(structures);
+        const wall = _.minBy(walls, (s) => s.hits / s.hitsMax) as Structure;
+        creep.memory.target = wall.id;
+        logRepairing(creep, wall);
+        return wall;
+    }
+
+    return null;
 }
 
 enum STATE {
@@ -44,35 +125,14 @@ const Repairer: Role = {
             case STATE.REPAIRING:
                 if (creep.store[RESOURCE_ENERGY] === 0) {
                     creep.memory.state = STATE.HARVESTING;
+                    creep.memory.target = undefined;
                     break;
                 }
 
-                const repairPriority = [
-                    STRUCTURE_SPAWN,
-                    STRUCTURE_EXTENSION,
-                    STRUCTURE_ROAD,
-                    STRUCTURE_CONTAINER,
-                    STRUCTURE_TOWER,
-                    STRUCTURE_WALL,
-                    STRUCTURE_RAMPART
-                ]
-
-                const targets = creep.room.find(FIND_STRUCTURES, {
-                    filter: (structure) => (
-                        !(structure instanceof StructureWall) && 
-                        structure.hits < structure.hitsMax * 0.8
-                    )
-                });
-
-                
-
-
-                console.log("Repairer targets:");
-                targets.forEach(t => console.log("    -",t.structureType, t.hits, t.hitsMax, (t.hits / t.hitsMax) * 100));
-
-                if (targets.length) {
-                    if (creep.repair(targets[0]) === ERR_NOT_IN_RANGE) {
-                        creep.moveTo(targets[0], { visualizePathStyle: { stroke: "#ffffff" } });
+                const target = findRepairTarget(creep);
+                if (target) {
+                    if (creep.repair(target) === ERR_NOT_IN_RANGE) {
+                        creep.moveTo(target, { visualizePathStyle: { stroke: "#ffffff" } });
                     }
                 }
                 break;
@@ -80,7 +140,7 @@ const Repairer: Role = {
     },
 
     spawnCap(room) {
-        return 1;
+        return 3;
     },
 
     body(room: Room) {
