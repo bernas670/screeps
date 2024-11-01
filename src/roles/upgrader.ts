@@ -35,9 +35,9 @@ const Upgrader: Role = {
 
     body(room: Room) {
         return [
-            WORK, WORK, WORK, WORK,         // 400
-            CARRY, CARRY, CARRY,            // 150
-            MOVE, MOVE, MOVE, MOVE, MOVE    // 150
+            CARRY, // 50, only need one because storage is next to controller
+            WORK, WORK, WORK, WORK, WORK, WORK, // 600, 10 per tick
+            MOVE, MOVE, MOVE
         ]
     }
 }
